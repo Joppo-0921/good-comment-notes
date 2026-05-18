@@ -1,0 +1,109 @@
+---
+import '../styles/global.css';
+import comments from '../data/comments.json';
+---
+
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width" />
+    <meta name="generator" content={Astro.generator} />
+    <title>GOOD COMMENT NOTES</title>
+  </head>
+  <body class="bg-white text-black antialiased">
+    <main class="max-w-2xl mx-auto px-6 py-16">
+      <header class="mb-12">
+        <h1 class="text-3xl font-bold tracking-tight">GOOD COMMENT NOTES</h1>
+        <p class="text-sm text-gray-500 mt-1">notes</p>
+        <div class="border-t border-gray-200 mt-6"></div>
+      </header>
+
+      <section class="space-y-2">
+        {comments.map((c) => (
+          <article
+            class="group p-4 -mx-4 rounded-md transition-all duration-200 hover:-translate-y-0.5 hover:shadow-sm hover:bg-gray-50 cursor-pointer"
+            data-video-id={c.videoId}
+            data-video-title={c.videoTitle}
+          >
+            <p class="text-base leading-relaxed text-black transition-all duration-200 group-hover:font-medium whitespace-pre-line">
+              {c.comment}
+            </p>
+            <div class="flex items-center justify-between mt-4 gap-4">
+              <span class="text-sm text-gray-500 truncate">{c.videoTitle}</span>
+              {c.likes !== null && (
+                <span class="flex items-center gap-1 text-sm text-gray-500 transition-colors duration-200 group-hover:text-[#e85a5a] shrink-0">
+                  <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z"/>
+                  </svg>
+                  {c.likes.toLocaleString()}
+                </span>
+              )}
+            </div>
+          </article>
+        ))}
+      </section>
+    </main>
+
+    {/* Modal */}
+    <dialog id="video-modal" class="m-auto bg-transparent p-0 backdrop:bg-black/70 backdrop:backdrop-blur-sm">
+      <div class="bg-white rounded-lg p-6 w-[90vw] max-w-3xl max-h-[90vh] overflow-y-auto">
+        <button id="close-modal" aria-label="Close" class="block ml-auto text-gray-400 hover:text-black text-3xl leading-none mb-4 cursor-pointer w-10 h-10 flex items-center justify-center">×</button>
+        <div class="aspect-video w-full bg-black rounded overflow-hidden">
+          <iframe id="video-iframe" class="w-full h-full" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+        </div>
+        <p id="modal-video-title" class="mt-4 text-sm text-gray-500"></p>
+        <p id="modal-comment" class="mt-4 text-base leading-relaxed whitespace-pre-line text-black"></p>
+        <a id="modal-youtube-link" href="#" target="_blank" rel="noopener" class="inline-block mt-6 text-sm text-gray-500 hover:text-black underline">YouTubeで開く →</a>
+      </div>
+    </dialog>
+
+    <script>
+      const modal = document.getElementById('video-modal') as HTMLDialogElement;
+      const iframe = document.getElementById('video-iframe') as HTMLIFrameElement;
+      const closeBtn = document.getElementById('close-modal') as HTMLButtonElement;
+      const titleEl = document.getElementById('modal-video-title') as HTMLElement;
+      const commentEl = document.getElementById('modal-comment') as HTMLElement;
+      const youtubeLink = document.getElementById('modal-youtube-link') as HTMLAnchorElement;
+
+      function closeModal() {
+        iframe.src = '';
+        modal.close();
+      }
+
+      document.querySelectorAll<HTMLElement>('article[data-video-id]').forEach((card) => {
+        card.addEventListener('click', () => {
+          const videoId = card.getAttribute('data-video-id');
+          const videoTitle = card.getAttribute('data-video-title');
+          const commentText = card.querySelector('p')?.textContent?.trim() ?? '';
+          if (!videoId) return;
+
+          const origin = encodeURIComponent(window.location.origin);
+          iframe.src = `https://www.youtube.com/embed/${videoId}?rel=0&origin=${origin}`;
+          titleEl.textContent = videoTitle;
+          commentEl.textContent = commentText;
+          youtubeLink.href = `https://www.youtube.com/watch?v=${videoId}`;
+          modal.showModal();
+          closeBtn.focus();
+        });
+      });
+
+      closeBtn.addEventListener('click', closeModal);
+
+      modal.addEventListener('click', (e) => {
+        if (e.target === modal) closeModal();
+      });
+
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && modal.open) {
+          e.preventDefault();
+          closeModal();
+        }
+      });
+
+      modal.addEventListener('close', () => {
+        iframe.src = '';
+      });
+    </script>
+  </body>
+</html>
