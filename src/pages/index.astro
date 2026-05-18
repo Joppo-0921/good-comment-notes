@@ -1,6 +1,19 @@
 ---
 import '../styles/global.css';
 import comments from '../data/comments.json';
+
+function formatDate(isoString: string): string {
+  if (!isoString) return '';
+  try {
+    const date = new Date(isoString);
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}.${month}.${day}`;
+  } catch {
+    return '';
+  }
+}
 ---
 
 <html lang="ja">
@@ -11,26 +24,29 @@ import comments from '../data/comments.json';
     <meta name="generator" content={Astro.generator} />
     <title>GOOD COMMENT NOTES</title>
   </head>
-  <body class="bg-white text-black antialiased">
-    <main class="max-w-2xl mx-auto px-6 py-16">
-      <header class="mb-12">
+  <body class="bg-[#fafafa] text-black antialiased min-h-screen flex flex-col">
+    <main class="flex-1 max-w-2xl mx-auto px-6 py-16 w-full">
+      <header class="mb-16">
         <h1 class="text-3xl font-bold tracking-tight">GOOD COMMENT NOTES</h1>
-        <p class="text-sm text-gray-500 mt-1">notes</p>
-        <div class="border-t border-gray-200 mt-6"></div>
+        <p class="mt-6 text-base text-gray-600 leading-relaxed">YouTubeで出会った、ずっと残るコメントを集めています。</p>
+        <div class="border-t border-gray-200 mt-8"></div>
       </header>
 
-      <section class="space-y-2">
+      <section class="divide-y divide-gray-200">
         {comments.map((c) => (
           <article
-            class="group p-4 -mx-4 rounded-md transition-all duration-200 hover:-translate-y-0.5 hover:shadow-sm hover:bg-gray-50 cursor-pointer"
+            class="group relative py-8 px-4 -mx-4 transition-all duration-200 hover:-translate-y-1 hover:shadow-sm hover:bg-white cursor-pointer rounded-md"
             data-video-id={c.videoId}
             data-video-title={c.videoTitle}
           >
-            <p class="text-base leading-relaxed text-black transition-all duration-200 group-hover:font-medium whitespace-pre-line">
+            {c.postedAt && (
+              <span class="absolute top-8 right-4 text-xs text-gray-400 tabular-nums">{formatDate(c.postedAt)}</span>
+            )}
+            <p class="text-base leading-relaxed text-black transition-all duration-200 group-hover:font-medium whitespace-pre-line pr-24">
               {c.comment}
             </p>
             <div class="flex items-center justify-between mt-4 gap-4">
-              <span class="text-sm text-gray-500 truncate">{c.videoTitle}</span>
+              <span class="text-xs uppercase tracking-wide text-gray-500 truncate">{c.videoTitle}</span>
               {c.likes !== null && (
                 <span class="flex items-center gap-1 text-sm text-gray-500 transition-colors duration-200 group-hover:text-[#e85a5a] shrink-0">
                   <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
@@ -45,14 +61,18 @@ import comments from '../data/comments.json';
       </section>
     </main>
 
+    <footer class="max-w-2xl mx-auto px-6 py-8 w-full text-xs text-gray-400 text-center">
+      © GOOD COMMENT NOTES
+    </footer>
+
     {/* Modal */}
-    <dialog id="video-modal" class="m-auto bg-transparent p-0 backdrop:bg-black/70 backdrop:backdrop-blur-sm">
+    <dialog id="video-modal" class="m-auto bg-transparent p-0 backdrop:bg-black/70 backdrop:backdrop-blur-md relative overflow-visible">
+      <button id="close-modal" aria-label="Close" class="absolute -top-3 -right-3 sm:-top-4 sm:-right-4 bg-white text-gray-800 hover:bg-gray-100 text-2xl leading-none cursor-pointer w-10 h-10 rounded-full flex items-center justify-center shadow-md z-10">×</button>
       <div class="bg-white rounded-lg p-6 w-[90vw] max-w-3xl max-h-[90vh] overflow-y-auto">
-        <button id="close-modal" aria-label="Close" class="block ml-auto text-gray-400 hover:text-black text-3xl leading-none mb-4 cursor-pointer w-10 h-10 flex items-center justify-center">×</button>
         <div class="aspect-video w-full bg-black rounded overflow-hidden">
           <iframe id="video-iframe" class="w-full h-full" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
         </div>
-        <p id="modal-video-title" class="mt-4 text-sm text-gray-500"></p>
+        <p id="modal-video-title" class="mt-4 text-xs uppercase tracking-wide text-gray-500"></p>
         <p id="modal-comment" class="mt-4 text-base leading-relaxed whitespace-pre-line text-black"></p>
         <a id="modal-youtube-link" href="#" target="_blank" rel="noopener" class="inline-block mt-6 text-sm text-gray-500 hover:text-black underline">YouTubeで開く →</a>
       </div>
